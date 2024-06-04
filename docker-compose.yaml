@@ -28,7 +28,7 @@ services:
       dockerfile: ./deployment/images/backend.Dockerfile
     container_name: plataforma-be
     image: plataforma-be
-    command: python manage.py runserver 0:8000
+    command: python manage.py runserver  0.0.0.0:8000
     environment:
       &backend_environment
       - DJANGO_DEBUG=true
