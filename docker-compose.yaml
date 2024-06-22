@@ -28,7 +28,10 @@ services:
       dockerfile: ./deployment/images/backend.Dockerfile
     container_name: plataforma-be
     image: plataforma-be
-    command: python manage.py runserver  0.0.0.0:8000
+    command: 
+      sh -c "python plataforma/manage.py makemigrations && 
+            python plataforma/manage.py migrate &&    
+            python plataforma/manage.py runserver  0.0.0.0:8000"
     environment:
       &backend_environment
       - DJANGO_DEBUG=true
@@ -37,7 +40,7 @@ services:
       - "8888:8888"
     volumes:
       &backend_volumes
-      - ./backend:/app:cached
+      - ./plataforma:/app/plataforma
     depends_on:
       &backend_depends_on
       - postgres
