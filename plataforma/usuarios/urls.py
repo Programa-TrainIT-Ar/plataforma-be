@@ -1,14 +1,11 @@
-# plataforma\usuarios\urls.py
 from django.urls import path
-from .views import RegistroView, ActivarView
-from . import views
+from .views import RegisterView, ActivationView, LoginView, Auth0LoginView, Auth0CallbackView, PerfilView
 
 urlpatterns = [
-    path("registro/", RegistroView.as_view(), name="register"),
-    path("activar/<str:token>/", ActivarView.as_view(), name="activate"),
-    path("iniciar-sesion/", views.IniciarSesionView.as_view(), name="iniciar-sesion"),
-    path("auth0/login/", views.Auth0LoginView.as_view(), name="auth0_login"),
-    path("auth0/callback/", views.Auth0CallbackView.as_view(), name="auth0_callback"),
-    path("perfil/", views.PerfilView.as_view(), name="perfil"),
-    # path('desactivar/<int:pk>/', views.DesactivarUsuarioView.as_view(), name='desactivar-usuario'),
+    path("registro/", RegisterView.as_view(), name="register"),
+    path("activar/<str:token>/", ActivationView.as_view(), name="activate"),
+    path("iniciar-sesion/", LoginView.as_view(), name="iniciar-sesion"),
+    path("auth0/login/", Auth0LoginView.as_view(), name="auth0_login"),
+    path("auth0/callback/", Auth0CallbackView.as_view(), name="auth0_callback"),
+    path("perfil/", PerfilView.as_view(), name="perfil"),
 ]
