@@ -14,13 +14,5 @@ COPY plataforma/requirements.txt /app/
 RUN python3 -m pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar la carpeta plataforma/plataforma a /app/plataforma en la imagen
-COPY plataforma/plataforma /app/plataforma
-
-# Copiar manage.py a /app/ en la imagen
-COPY plataforma/manage.py /app/
-# COPY plataforma/src /app/src/
-# COPY plataforma/statics /app/statics/
-
 ARG VERSION
 ENV VERSION $VERSION
