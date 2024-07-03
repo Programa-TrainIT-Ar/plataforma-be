@@ -166,3 +166,21 @@ class PerfilView(generics.RetrieveAPIView):
         users = request.user
         serializer = self.get_serializer(users)
         return Response(serializer.data)
+
+
+class UserProfileView(generics.RetrieveAPIView):
+    serializer_class = UsersSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, user_id=None, *args, **kwargs):
+        User = get_user_model()
+        if user_id:
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response({"error": "Usuario no encontrado"}, status=404)
+        else:
+            user = request.user
+
+        serializer = self.get_serializer(user)
+        return Response(serializer.data, status=200)
