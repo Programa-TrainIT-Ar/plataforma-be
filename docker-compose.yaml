@@ -30,10 +30,11 @@ services:
     container_name: plataforma-be
     image: plataforma-be
     command: >
-      sh -c "python plataforma/manage.py makemigrations &&
-             python plataforma/manage.py makemigrations participante &&
-             python plataforma/manage.py migrate &&
-             python plataforma/manage.py runserver 0.0.0.0:8000"
+      sh -c "python plataforma/manage.py makemigrations --noinput &&
+             python plataforma/manage.py makemigrations participante --noinput &&
+             python plataforma/manage.py migrate --noinput &&
+             python plataforma/manage.py runserver 0.0.0.0:8000" 
+
     environment:
       - DJANGO_DEBUG=true
       - DATABASE_URL=postgres://me:contrasena@postgres:5432/root
