@@ -2,6 +2,7 @@ from datetime import timedelta
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+import dj_database_url
 
 # Load environment variables from .env file
 load_dotenv()
@@ -34,6 +35,11 @@ INSTALLED_APPS = [
     "allauth.socialaccount",
     "dj_rest_auth.registration",  # Required for registration endpoints
     "usuarios",  # Your custom app
+    'participante',
+    'proyecto',
+    'edicion',
+    'celula',
+    'modulo',
 ]
 
 # MIDDLEWARE configuration
@@ -76,15 +82,18 @@ TEMPLATES = [
 WSGI_APPLICATION = "plataforma.wsgi.application"
 
 # DATABASE configuration
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": "root",
+#         "USER": os.getenv("DB_USER"),
+#         "PASSWORD": os.getenv("DB_PASSWORD"),
+#         "HOST": "postgres",
+#         "PORT": "5432",
+#     }
+# }
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "root",
-        "USER": os.getenv("DB_USER"),
-        "PASSWORD": os.getenv("DB_PASSWORD"),
-        "HOST": "postgres",
-        "PORT": "5432",
-    }
+    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
 }
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
