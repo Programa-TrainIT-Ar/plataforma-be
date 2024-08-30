@@ -1,18 +1,31 @@
+import logging
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
-from .serializer import UsersSerializer
+
+from .models import Usuario
+from .serializer import (
+    PasswordResetRequestSerializer,
+    PasswordResetSerializer,
+    UsersSerializer,
+)
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.core.mail import send_mail
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from jose import jwt
-
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
 from authlib.integrations.django_client import OAuth
 from django.urls import reverse
 from rest_framework.views import APIView
 from datetime import timedelta
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from django.core.cache import cache
+from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 
 oauth = OAuth()
 
@@ -184,3 +197,97 @@ class UserProfileView(generics.RetrieveAPIView):
 
         serializer = self.get_serializer(user)
         return Response(serializer.data, status=200)
+
+
+class PasswordResetRequestView(APIView):
+    def post(self, request):
+        serializer = PasswordResetRequestSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data["email"]
+
+            # Check if the email exists in the database
+            try:
+                user = Usuario.objects.get(email=email)
+            except Usuario.DoesNotExist:
+                return Response(
+                    {"error": "No existe un usuario con ese correo electrónico."},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
+
+            # Rate limiting
+            cache_key = f"password_reset_{user.id}"
+            last_request = cache.get(cache_key)
+
+            if (
+                last_request and (timezone.now() - last_request).total_seconds() < 300
+            ):  # 5 minutes
+                return Response(
+                    {
+                        "error": "Por favor, espere 5 minutos antes de solicitar otro restablecimiento de contraseña."
+                    },
+                    status=status.HTTP_429_TOO_MANY_REQUESTS,
+                )
+
+            # Update last request time
+            cache.set(cache_key, timezone.now(), 300)  # Store for 5 minutes
+
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+
+            domain = (
+                "localhost:8000"  
+            )
+            reset_link = f"http://{domain}/api/usuarios/reset-password/{uid}/{token}/"
+
+            mail_subject = "Restablecimiento de contraseña"
+            html_message = render_to_string(
+                "email/reset_password_email.html",
+                {"user": user, "reset_link": reset_link},
+            )
+            plain_message = strip_tags(html_message)
+
+            send_mail(
+                mail_subject,
+                plain_message,
+                settings.EMAIL_HOST_USER,
+                [user.email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+
+            logger.info(f"Reset password link sent: {reset_link}")
+
+            return Response(
+                {"message": "Se ha enviado un correo para restablecer la contraseña."},
+                status=status.HTTP_200_OK,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PasswordResetView(APIView):
+    def post(self, request, uidb64, token):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = Usuario.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, Usuario.DoesNotExist):
+            logger.error(f"Invalid uidb64: {uidb64}")
+            return Response(
+                {"error": "Token inválido o usuario no encontrado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not default_token_generator.check_token(user, token):
+            logger.error(f"Invalid token for user {user.id}: {token}")
+            return Response(
+                {"error": "Token inválido o expirado."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = PasswordResetSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=user)
+            return Response(
+                {"message": "Contraseña restablecida exitosamente."},
+                status=status.HTTP_200_OK,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -26,22 +26,22 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django.contrib.sites",  # Required for django-allauth
+    "django.contrib.sites",
     "rest_framework",
     "rest_framework.authtoken",
     "dj_rest_auth",
     "allauth",
     "allauth.account",
     "allauth.socialaccount",
-    "dj_rest_auth.registration",  # Required for registration endpoints
-    "usuarios",  # Your custom app
-    'participante',
-    'proyecto',
-    'edicion',
-    'celula',
-    'modulo',
+    "dj_rest_auth.registration",
+    "usuarios",
+    "participante",
+    "proyecto",
+    "edicion",
+    "celula",
+    "modulo",
 ]
-
+SITE_ID = 1
 # MIDDLEWARE configuration
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -53,7 +53,11 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "allauth.account.middleware.AccountMiddleware",  # Required for django-allauth
 ]
-
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+    }
+}
 # SESSIONS configuration
 SESSION_ENGINE = "django.contrib.sessions.backends.db"  # Use database-backed sessions
 SESSION_COOKIE_AGE = 1209600  # 2 weeks, or set it to your preferred time
@@ -92,9 +96,7 @@ WSGI_APPLICATION = "plataforma.wsgi.application"
 #         "PORT": "5432",
 #     }
 # }
-DATABASES = {
-    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
-}
+DATABASES = {"default": dj_database_url.config(default=os.environ.get("DATABASE_URL"))}
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
