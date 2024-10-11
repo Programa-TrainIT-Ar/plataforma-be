@@ -264,3 +264,8 @@ pyrightconfig.json
 
 
 backend
+.pyc
+
+# Ignorar todos los archivos de migración
+**/migrations/*.py
+!**/migrations/__init__.py
